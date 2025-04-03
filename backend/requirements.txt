@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+requests
+beautifulsoup4
+python-dotenv
+openai
+groq
+selenium
+webdriver_manager
+dotenv

@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  web:
+    image: navong/jobintel:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}  # Ensure your .env file is correctly set up
+    volumes:
+      - .:/app
+    depends_on:
+      - selenium
+
+  selenium:
+    image: seleniarm/standalone-chromium
+    shm_size: 2g  # Prevent crashes due to low shared memory
+    ports:
+      - "4444:4444"
+    environment:
+      - SE_NODE_MAX_INSTANCES=1
+      - SE_NODE_MAX_SESSIONS=1
