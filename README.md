@@ -1,4 +1,5 @@
 # Job-Intel
+[Demo Link](https://job-intel.vercel.app/)
 
 **Job-Intel** is a tool designed to extract and process job-related information from specific URLs. It uses **Selenium** to scrape data, **Groq API** with **Llama 3.3 70B** for intelligent data extraction, and a **system prompt** to ensure the output is in the desired format. The backend is built with **FastAPI**, and the frontend uses **React**, **TypeScript**, and **TanStack Query**. The application is containerized using **Docker** and exposed to the public via **Cloudflare Tunnel**.
 
