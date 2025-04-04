@@ -61,3 +61,21 @@
 1. Enter a job URL in the frontend.
 2. Click "Extract" to scrape and process the data.
 3. View the formatted results on the frontend.
+
+---
+
+## Workflow
+
+![alt text](job-intel_workflow_(clean_layout).png)
+
+---
+
+## Work Process
+
+![alt text](image.png)
+
+---
+
+## Result
+
+![alt text](image-1.png)
