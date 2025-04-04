@@ -36,7 +36,7 @@
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/Navong/job-intel.git
+   git clone https://github.com/Navong/jobintel-ai.git
    cd job-intel
    ```
 
