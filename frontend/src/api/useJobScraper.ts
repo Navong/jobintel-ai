@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, QueryClient } from "@tanstack/react-query";
 
 export interface JobDescription {
     job_title: string;
@@ -10,26 +10,36 @@ export interface JobDescription {
 }
 
 const fetchJobDescription = async (url: string, model: string): Promise<JobDescription> => {
-    const response = await fetch(`/api/scrape-job?url=${encodeURIComponent(url)}&model=${model}`);
+    const response = await fetch(`https://jobintel.navong.cloud/api/scrape-job?url=${encodeURIComponent(url)}&model=${model}`);
     
     if (!response.ok) {
-        throw new Error("Failed to fetch job details");
+        throw new Error(`Failed to fetch job details (HTTP ${response.status})`);
     }
     
     const result = await response.json();
     
     if (result.status !== "success") {
-        throw new Error("AI processing failed");
+        throw new Error(result.message || "AI processing failed");
     }
     
     return result.data; // Extract job description data
 };
 
 export function useJobScraper(jobUrl: string, model: string) {
-    return useQuery({
-        queryKey: ["jobDescription", jobUrl, model],
-        queryFn: () => fetchJobDescription(jobUrl, model),
-        enabled: !!jobUrl, // Prevents fetching when URL is empty
-        // retry: 2, // Retry twice if the request fails
-    });
+    const queryClient = new QueryClient();
+
+    const queryKey = ["jobDescription", jobUrl, model];
+
+    return {
+        ...useQuery({
+            queryKey,
+            queryFn: () => fetchJobDescription(jobUrl, model),
+            enabled: !!jobUrl, // Only fetch if the URL is provided
+            staleTime: 10 * 60 * 1000, // Data is considered fresh for 10 minutes
+            refetchOnWindowFocus: false, // Disable refetching when switching tabs
+            refetchOnMount: false, // Disable refetching when the component mounts
+        }),
+        queryKey,
+        queryClient,
+    };
 }

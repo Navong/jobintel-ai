@@ -1,20 +1,78 @@
 import { useState } from "react";
 import { useJobScraper } from "../api/useJobScraper";
 
+const SkeletonLoader = () => (
+    <div className="mt-6 p-4 border rounded bg-gray-100 animate-pulse">
+        <div className="h-6 bg-gray-300 rounded w-3/4 mb-4"></div>
+
+        <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div>
+        <ul className="space-y-2">
+            <li className="h-4 bg-gray-300 rounded w-full"></li>
+            <li className="h-4 bg-gray-300 rounded w-full"></li>
+            <li className="h-4 bg-gray-300 rounded w-full"></li>
+            <li className="h-4 bg-gray-300 rounded w-full"></li>
+        </ul>
+
+        <div className="h-4 bg-gray-300 rounded w-1/2 mt-4 mb-2"></div>
+        <ul className="space-y-2">
+            <li className="h-4 bg-gray-300 rounded w-full"></li>
+            <li className="h-4 bg-gray-300 rounded w-full"></li>
+            <li className="h-4 bg-gray-300 rounded w-full"></li>
+        </ul>
+
+        <div className="h-4 bg-gray-300 rounded w-1/2 mt-4 mb-2"></div>
+        <ul className="space-y-2">
+            <li className="h-4 bg-gray-300 rounded w-full"></li>
+            <li className="h-4 bg-gray-300 rounded w-full"></li>
+        </ul>
+
+        <div className="h-4 bg-gray-300 rounded w-1/2 mt-4 mb-2"></div>
+        <ul className="space-y-2">
+            <li className="h-4 bg-gray-300 rounded w-full"></li>
+            <li className="h-4 bg-gray-300 rounded w-full"></li>
+        </ul>
+
+        <div className="h-4 bg-gray-300 rounded w-1/2 mt-4 mb-2"></div>
+    </div>
+);
+
 const JobScraper = () => {
     const [url, setUrl] = useState("");
     const [selectedModel, setSelectedModel] = useState("llama-3.3-70b-versatile"); // Default model
-    const { data: jobData, isLoading, error, refetch } = useJobScraper(url, selectedModel);
+    const [isFetching, setIsFetching] = useState(false); // Custom loading state
 
-    const handleFetchJob = () => {
-        if (url) refetch(); // Trigger the query with the selected model
+    const { data: jobData, isLoading, error, refetch, queryKey, queryClient } = useJobScraper(url, selectedModel);
+
+    const handleFetchJob = async () => {
+        if (url) {
+            setIsFetching(true); // Start custom loading state
+            try {
+                // Check if the query is already cached and fresh
+                const cachedData = queryClient.getQueryData(queryKey);
+                if (!cachedData) {
+                    await refetch(); // Only refetch if there's no cached data
+                }
+            } finally {
+                setIsFetching(false); // Reset custom loading state
+            }
+        }
     };
+
+    const handleModelChange = (e: any) => {
+        setSelectedModel(e.target.value);
+    };
+
+    // Determine the overall loading state
+    const isOverallLoading = isLoading || isFetching;
+
+    // Check if the query is already cached
+    const isCached = queryClient.getQueryData(queryKey);
+
+    // Determine if the fetch button should be disabled
+    const isFetchButtonDisabled = !url || isOverallLoading || !!isCached;
 
     return (
         <div className="max-w-2xl mx-auto p-6 border rounded shadow-lg">
-            {/* <h2 className="text-xl font-bold mb-4">Job Scraper</h2> */}
-
-            {/* Job Posting URL Input */}
             <input
                 type="text"
                 placeholder="Enter job posting URL..."
@@ -23,31 +81,30 @@ const JobScraper = () => {
                 className="w-full p-2 border rounded mb-4"
             />
 
-            {/* LLM Model Selector */}
             <select
                 value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value)}
+                onChange={handleModelChange}
                 className="w-full p-2 border rounded mb-4"
             >
-                <option value="gemma2-9b-it">Gemma2-9B-IT</option>
-                <option value="llama-3.3-70b-versatile">LLaMA 3.3 - 70B Versatile</option>
-                <option value="llama3-70b-8192">LLaMA3-70B</option>
+                <option value="qwen-qwq-32b">qwen-qwq-32b</option>
+                <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
             </select>
 
-            {/* Fetch Button */}
             <button
                 onClick={handleFetchJob}
-                disabled={!url}
-                className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                disabled={isFetchButtonDisabled} // Disable button if URL is empty, loading, or cached
+                className={`w-full p-2 text-white rounded ${
+                    isFetchButtonDisabled ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
+                }`}
             >
-                {isLoading ? "Fetching..." : "Fetch Job Details"}
+                {isOverallLoading ? "Fetching..." : "Fetch Job Details"}
             </button>
 
-            {/* Error Message */}
             {error && <p className="text-red-500 mt-4">Error: {error.message}</p>}
 
-            {/* Display Job Details */}
-            {jobData && (
+            {isOverallLoading ? (
+                <SkeletonLoader />
+            ) : jobData ? (
                 <div className="mt-6 p-4 border rounded bg-gray-100">
                     <h3 className="text-lg font-semibold">{jobData.job_title}</h3>
 
@@ -87,15 +144,14 @@ const JobScraper = () => {
                         </>
                     )}
 
-                    {/* Apply Link */}
                     <p className="mt-4">
-                        <strong>How to Apply:</strong> 
+                        <strong>How to Apply:</strong>
                         <a href={jobData.how_to_apply} target="_blank" rel="noopener noreferrer" className="text-blue-500">
                             Apply Here
                         </a>
                     </p>
                 </div>
-            )}
+            ) : null}
         </div>
     );
 };
